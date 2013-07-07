@@ -1,0 +1,134 @@
+NAME
+    IO::Vectored - Read from or write to multiple buffers at once
+
+WRITE SYNOPSIS
+        use IO::Vectored;
+
+        syswritev($file_handle, "hello", "world") || die "syswritev: $!";
+
+READ SYNOPSIS
+        use IO::Vectored;
+
+        my $buf1 = " " x 5;
+        my $buf2 = " " x 5;
+
+        sysreadv($file_handle, $buf1, $buf2) || die "sysreadv: $!";
+
+        ## if input is "abcdefg" then:
+        ##  $buf1 eq "abcde"
+        ##  $buf2 eq "fg   "
+
+DESCRIPTION
+    Vectored-IO is sometimes called "scatter/gather IO". The idea is that
+    instead of doing multiple read(2) or write(2) system calls for each
+    string you wish to read/write, your userspace program creates a vector
+    of pointers to the various strings and does a single system call.
+
+    Although some people consider these interfaces contrary to the simple
+    design principles of unix, they provide certain advantages which are
+    described below.
+
+    This module is an interface to your system's <readv(2)> and <writev(2)>
+    vectored-IO system calls specified by POSIX.1. It exports the functions
+    "syswritev" and "sysreadv" which are almost the same as the syswrite and
+    sysread perl functions except for some minor differences described
+    below.
+
+ADVANTAGES
+    The first advantage of vectored-IO is that it reduces the number of
+    system calls required. This will provide an atomicity guarantee for the
+    writing of the data and also eliminate a constant performance overhead.
+
+    Another potential advantage of vectored-IO is that doing multiple system
+    calls can sometimes result in excessive network packets being sent. The
+    classic example of this is a web-server handling a static file. If the
+    server write(2)s the HTTP headers and then write(2)s the file data, the
+    kernel might send the headers and file in separate network packets. A
+    single packet would be better for latency and bandwidth. <TCP_CORK> is a
+    solution to this issue but it is linux-specific and can require more
+    system calls.
+
+    Of course an alternative to vectored-IO is to copy the buffers together
+    into a contiguous buffer before calling write(2). The performance
+    trade-off is that a potentially large buffer needs to be allocated and
+    then all the smaller buffers copied into it. Also, if your buffers are
+    backed by memory-mapped files (created with say File::Map) then this
+    approach results in an unnecessary copy of the data to userspace. If you
+    use vectored-IO then files can be copied directly from the file-system
+    cache into the socket's <mbuf>. The non-standard sendfile(2) system call
+    can theoretically do one fewer copy but it requires a system call for
+    each file sent, unlike vectored-IO.
+
+    Note that as with anything the performance benefits of vectored-IO will
+    vary from application to application and you shouldn't retro-fit it onto
+    an application unless benchmarking has shown measurable benefits.
+    However, vectored-IO can sometimes be more programmer convenient than
+    regular IO and may be worth using for that reason alone.
+
+RETURN VALUES AND ERROR CONDITIONS
+    As mentioned above, this module's interface tries to match "syswrite"
+    and "sysread" so the same caveats that apply to those functions apply to
+    the vectored interfaces. In particular, you should not mix these calls
+    with userspace-buffered interfaces such as print or seek. Mixing the
+    vectored interfaces with "syswrite" and "sysread" is fine though.
+
+    "syswritev" returns the number of bytes written (usually the sum of the
+    lengths of all arguments). If it returns less, either there was an error
+    indicated in $! or you are using non-blocking IO in which case it is up
+    to you to adjust it so that the next "syswritev" points to the rest of
+    the data.
+
+    "sysreadv" returns the number of bytes read up to the sum of the lengths
+    of all arguments. Note that unlike "sysread", "sysreadv" will not
+    truncate any buffers (see the "READ SYNOPSIS" above and the TODO below).
+
+    Both of these functions can also return "undef" if the underlying
+    readv(2) or writev(2) system calls fail for any reason other than
+    "EINTR". In this case, $! will be set with the error.
+
+    Like "sysread"/"syswrite", the vectored versions also croak for various
+    reasons (see the "t/exceptions.t" test for a full list). Some examples
+    are: passing in too many arguments (greater than the
+    "IO::Vectored::IOV_MAX" constant), trying to use a closed file-handle,
+    and trying to write to a read-only/constant string.
+
+TODO
+    To the extent possible, make it do the right thing for file-handles with
+    non-raw encodings and unicode strings. Any test-cases are appreciated.
+
+    Investigate if there is a performance benefit in eliminating the perl
+    wrapper subs and re-implementing their logic in XS.
+
+    Think about truncating strings like "sysread" does. Please don't depend
+    on the non-truncation behaviour of "sysreadv" until version 1.000: You
+    have been warned. :)
+
+    Think about whether this module should support vectors larger than
+    "IOV_MAX" by calling "writev"/"readv" multiple times. This should
+    probably be opt-in because it breaks atomicity guarantees.
+
+    Support windows with "ReadFileScatter", "WriteFileGather", "WSASend",
+    and "WSARecv".
+
+SEE ALSO
+    <IO-Vectored github repo>
+
+    Useful modules to combine with vectored-IO:
+
+    File::Map / Sys::Mmap
+
+    String::Slice / overload::substr
+
+    "sendfile()" is less general than and not really compatible with
+    vectored-IO, but here are some perl interfaces:
+
+    Sys::Sendfile / Sys::Syscall / Sys::Sendfile::FreeBSD
+
+AUTHOR
+    Doug Hoyte, "<doug@hcsw.org>"
+
+COPYRIGHT & LICENSE
+    Copyright 2013 Doug Hoyte.
+
+    This module is licensed under the same terms as perl itself.
+

@@ -1,0 +1,9 @@
+Changes
+lib/IO/Vectored.pm
+Makefile.PL
+MANIFEST
+MANIFEST.SKIP
+t/exceptions.t
+t/normal.t
+Vectored.xs
+META.yml                                 Module meta-data (added by MakeMaker)
