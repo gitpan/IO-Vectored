@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               IO-Vectored
-version:            0.100
+version:            0.103
 abstract:           ~
 author:  []
 license:            perl
