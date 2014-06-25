@@ -29,7 +29,10 @@ DESCRIPTION
     minimalist design principles of unix, vectored-IO has certain advantages
     which are described below.
 
-    This module is an interface to your system's <readv(2)> and <writev(2)>
+    This module is an interface to your system's readv(2)
+    <http://pubs.opengroup.org/onlinepubs/009695399/functions/readv.html>
+    and writev(2)
+    <http://pubs.opengroup.org/onlinepubs/009695399/functions/writev.html>
     vectored-IO system calls specified by POSIX.1. It exports the functions
     "syswritev" and "sysreadv" which are almost the same as the "syswrite"
     and "sysread" perl functions except that they accept multiple strings
@@ -47,9 +50,9 @@ ADVANTAGES
     is a web-server sending a static file. If the server "write()"s the HTTP
     headers and then "write()"s the file data, the kernel might send the
     headers and file in separate network packets. Ensuring a single packet
-    is better for latency and bandwidth consumption. <TCP_CORK> is a
-    solution to this issue but it is Linux-specific and requires more system
-    calls.
+    is better for latency and bandwidth consumption. TCP_CORK
+    <http://baus.net/on-tcp_cork/> is a solution to this issue but it is
+    Linux-specific and requires more system calls.
 
     Of course an alternative to vectored-IO is to copy the buffers together
     into a contiguous buffer before calling write(2). The performance
@@ -58,7 +61,8 @@ ADVANTAGES
     buffers are backed by memory-mapped files (created with File::Map for
     instance) then this approach results in an unnecessary copy of the data
     to userspace. If you use vectored-IO then files can be copied directly
-    from the file-system cache into the socket's <mbuf>.
+    from the file-system cache into the socket's mbuf
+    <http://www.openbsd.org/cgi-bin/man.cgi?query=mbuf>.
 
     Note that as with anything the performance benefits of vectored-IO will
     vary from application to application and you shouldn't retro-fit it onto
@@ -178,7 +182,7 @@ TODO
     and "WSARecv".
 
 SEE ALSO
-    <IO-Vectored github repo>
+    IO-Vectored github repo <https://github.com/hoytech/IO-Vectored>
 
     Useful modules to combine with vectored-IO:
 

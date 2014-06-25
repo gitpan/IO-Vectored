@@ -4,7 +4,7 @@ use strict;
 
 use Carp;
 
-our $VERSION = '0.103';
+our $VERSION = '0.105';
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -48,7 +48,6 @@ __END__
 =head1 NAME
 
 IO::Vectored - Read from or write to multiple buffers at once
-
 
 =head1 WRITE SYNOPSIS
 
