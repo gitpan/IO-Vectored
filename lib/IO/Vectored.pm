@@ -4,7 +4,7 @@ use strict;
 
 use Carp;
 
-our $VERSION = '0.105';
+our $VERSION = '0.110';
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -177,7 +177,7 @@ Doug Hoyte, C<< <doug@hcsw.org> >>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2013 Doug Hoyte.
+Copyright 2013-2014 Doug Hoyte.
 
 This module is licensed under the same terms as perl itself.
 
